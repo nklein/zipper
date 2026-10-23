@@ -18,8 +18,11 @@
   }
 
   // Positions are in feet along the road (x is the car's front bumper),
-  // speeds in ft/s. Lane 0 is the left-most lane. Lanes at index
-  // lanesAfter and above are the ones that exit (or end) at the choke-point.
+  // speeds in ft/s. Lane 0 is the left-most lane. At an exit, lanes at index
+  // lanesAfter and above are the ones that exit at the choke-point. At a lane
+  // reduction, the lanes that end are split between the two sides, with the
+  // extra one (if any) on the right: the first lanesEndingLeft lanes end on
+  // the left, and those past the continuing lanes end on the right.
   class Simulation {
     constructor(settings, which) {
       this.settings = settings;
@@ -31,6 +34,7 @@
       this.lanesBefore = s.lanesBefore;
       this.lanesAfter = s.lanesAfter;
       this.isExit = s.chokeType === 'exit';
+      this.lanesEndingLeft = this.isExit ? 0 : Math.floor((s.lanesBefore - s.lanesAfter) / 2);
       this.chokeX = cfg.arrivalToChokeFt;
       this.endX = this.chokeX + cfg.afterChokeFt;
       this.maxDecel = mphToFps(cfg.maxDecelMphps);
@@ -76,7 +80,7 @@
     targetRange(car) {
       return this.headsForExit(car)
         ? [this.lanesAfter, this.lanesBefore - 1]
-        : [0, this.lanesAfter - 1];
+        : [this.lanesEndingLeft, this.lanesEndingLeft + this.lanesAfter - 1];
     }
 
     lanesNeeded(car, lane) {
@@ -88,7 +92,12 @@
 
     laneExists(lane, x) {
       if (lane < 0 || lane >= this.lanesBefore) return false;
-      return lane < this.lanesAfter || this.isExit || x < this.chokeX;
+      return this.continues(lane) || this.isExit || x < this.chokeX;
+    }
+
+    // Does this lane carry on past the choke-point as a through lane?
+    continues(lane) {
+      return lane >= this.lanesEndingLeft && lane < this.lanesEndingLeft + this.lanesAfter;
     }
 
     // Does this lane lead into the reduced-speed area?
@@ -304,7 +313,7 @@
       for (const candidate of [car.lane - 1, car.lane + 1]) {
         if (!this.laneExists(candidate, car.x)) continue;
         // Past the choke-point the ramp and the through lanes are separate roads.
-        if (!beforeChoke && (candidate < this.lanesAfter) !== (car.lane < this.lanesAfter)) continue;
+        if (!beforeChoke && this.continues(candidate) !== this.continues(car.lane)) continue;
         const candidateNeed = this.lanesNeeded(car, candidate);
         if (committed && candidateNeed > need) continue;
 

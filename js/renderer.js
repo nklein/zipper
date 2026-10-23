@@ -109,15 +109,16 @@
       const sim = this.sim;
       const N = sim.lanesBefore;
       const M = sim.lanesAfter;
-      const chokePx = view.px(sim.chokeX);
-      const yM = this.edgeY(view, M, 0, false);
-      const yN = this.edgeY(view, N, 0, false);
+      const y = (edge) => this.edgeY(view, edge, 0, false);
+      const right = view.px(view.endX);
 
       ctx.fillStyle = style.roadSurface;
-      ctx.fillRect(0, view.top, view.px(view.endX), M * view.laneHeight);
-
       ctx.beginPath();
       if (sim.isExit) {
+        const chokePx = view.px(sim.chokeX);
+        const yM = y(M);
+        const yN = y(N);
+        ctx.fillRect(0, view.top, right, M * view.laneHeight);
         ctx.rect(0, yM, chokePx, yN - yM);
         ctx.fill();
         const upper = this.rampPoints(view, M);
@@ -126,14 +127,33 @@
         [...upper, ...lower].forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
         ctx.closePath();
       } else {
-        const taperPx = view.px(sim.chokeX - cfg.taperFt);
-        ctx.moveTo(0, yM);
-        ctx.lineTo(chokePx, yM);
-        ctx.lineTo(taperPx, yN);
-        ctx.lineTo(0, yN);
+        const first = sim.lanesEndingLeft;
+        const outline = [...this.reductionEdge(view, 0), [right, y(first)],
+          [right, y(first + M)], ...this.reductionEdge(view, N).reverse()];
+        outline.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
         ctx.closePath();
       }
       ctx.fill();
+    }
+
+    // At a lane reduction, the lanes that end squeeze into the nearest
+    // continuing lane along the taper.
+    squeezedEdge(edge) {
+      const first = this.sim.lanesEndingLeft;
+      const last = first + this.sim.lanesAfter;
+      return Math.max(first, Math.min(last, edge));
+    }
+
+    // Points along the boundary above lane `edge` of a lane reduction, up to
+    // the choke-point if it ends there, and on to the end of the view if not.
+    reductionEdge(view, edge) {
+      const sim = this.sim;
+      const y = (e) => this.edgeY(view, e, 0, false);
+      const squeezed = this.squeezedEdge(edge);
+      const points = [[0, y(edge)], [view.px(sim.chokeX - cfg.taperFt), y(edge)],
+        [view.px(sim.chokeX), y(squeezed)]];
+      if (squeezed === edge) points.push([view.px(view.endX), y(edge)]);
+      return points;
     }
 
     strokeLine(points, color, dash) {
@@ -153,23 +173,22 @@
       const left = 0;
       const right = view.px(view.endX);
       const chokePx = view.px(sim.chokeX);
-      const taperPx = view.px(sim.chokeX - cfg.taperFt);
       const y = (edge) => this.edgeY(view, edge, 0, false);
       const solid = [];
       const dashed = style.dash;
 
       ctx.lineWidth = style.lineWidth;
 
-      // Through lanes.
-      this.strokeLine([[left, y(0)], [right, y(0)]], style.roadEdge, solid);
-      for (let edge = 1; edge < M; edge++) {
-        this.strokeLine([[left, y(edge)], [right, y(edge)]], style.laneMarking, dashed);
-      }
-      this.strokeLine([[left, y(M)], [chokePx, y(M)]], style.laneMarking, dashed);
-      this.strokeLine([[chokePx, y(M)], [right, y(M)]], style.roadEdge, solid);
-
-      // Lanes that exit or end.
       if (sim.isExit) {
+        // Through lanes.
+        this.strokeLine([[left, y(0)], [right, y(0)]], style.roadEdge, solid);
+        for (let edge = 1; edge < M; edge++) {
+          this.strokeLine([[left, y(edge)], [right, y(edge)]], style.laneMarking, dashed);
+        }
+        this.strokeLine([[left, y(M)], [chokePx, y(M)]], style.laneMarking, dashed);
+        this.strokeLine([[chokePx, y(M)], [right, y(M)]], style.roadEdge, solid);
+
+        // Lanes that exit.
         for (let edge = M + 1; edge < N; edge++) {
           this.strokeLine([[left, y(edge)], [chokePx, y(edge)], ...this.rampPoints(view, edge)],
             style.laneMarking, dashed);
@@ -178,11 +197,17 @@
         this.strokeLine([[left, y(N)], [chokePx, y(N)], ...this.rampPoints(view, N)],
           style.roadEdge, solid);
       } else {
-        for (let edge = M + 1; edge < N; edge++) {
-          this.strokeLine([[left, y(edge)], [taperPx, y(edge)], [chokePx, y(M)]],
-            style.laneMarking, dashed);
+        // The edges of the continuing lanes are dashed until the lanes beside
+        // them end, and solid after.
+        const first = sim.lanesEndingLeft;
+        for (let edge = 0; edge <= N; edge++) {
+          const points = this.reductionEdge(view, edge);
+          const outer = edge === 0 || edge === N;
+          const sides = !outer && (edge === first || edge === first + M);
+          this.strokeLine(sides ? points.slice(0, 3) : points,
+            outer ? style.roadEdge : style.laneMarking, outer ? solid : dashed);
+          if (sides) this.strokeLine(points.slice(2), style.roadEdge, solid);
         }
-        this.strokeLine([[left, y(N)], [taperPx, y(N)], [chokePx, y(M)]], style.roadEdge, solid);
       }
 
       // The choke-point itself.
@@ -194,10 +219,11 @@
       const sim = this.sim;
       const onRamp = sim.isExit && car.lane >= sim.lanesAfter;
       let position = car.visLane + 0.5;
-      if (!sim.isExit && position > sim.lanesAfter) {
+      const squeezed = sim.isExit ? position : this.squeezedEdge(position);
+      if (squeezed !== position) {
         // Squeeze cars in an ending lane along the taper.
         const t = Math.max(0, Math.min(1, (car.x - (sim.chokeX - cfg.taperFt)) / cfg.taperFt));
-        position = sim.lanesAfter + (position - sim.lanesAfter) * (1 - 0.8 * t);
+        position = squeezed + (position - squeezed) * (1 - 0.8 * t);
       }
       return this.edgeY(view, position, car.x, onRamp);
     }

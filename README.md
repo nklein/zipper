@@ -49,16 +49,16 @@ install.
     exit must be in those lanes by the choke-point, and everyone else must be
     out of them. A driver stuck waiting at the choke-point for too long gives
     up and takes the other road instead.
-  - **Lane reduction**: the right-hand lanes end, and everyone must merge
-    into the lanes that continue.
+  - **Lane reduction**: lanes end on both sides, as evenly as possible
+    (with the extra one on the right), and everyone must merge into the
+    lanes that continue in the middle.
 - **Lanes before**: how many lanes the road has before the choke-point.
 - **Lanes continuing**: how many of those lanes carry on past it. With an
   exit, the remaining lanes form the off-ramp.
 - **Cars taking the exit** (exit only): the share of drivers who want the
   exit.
 
-Changing the type or the number of lanes restarts the simulation. The other
-controls take effect immediately.
+Changing the type or the number of lanes restarts the simulation. The other controls take effect immediately.
 
 ### Traffic
 

@@ -12,7 +12,7 @@
     highwayMph: 65,
     limitMph: 65,
     arrivalRate: 1.5,
-    eagerness: [0, 100],
+    eagerness: [0, 30],
   };
 
   // Blank or half-typed number inputs keep the previous value.

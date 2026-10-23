@@ -13,7 +13,7 @@ Each car is a colored dot. In exit scenarios, the cars with a white border
 are the ones that want to take the exit. Everyone else wants to stay on the
 highway, and has to get out of the exit lanes before the choke-point.
 
-![Two roads approaching a three-lane exit after 45 simulated minutes: the top road, with eagerness 0, is jammed in every lane, while the bottom road, with eagerness 100, is busy but keeps moving](docs/screenshot.png)
+![Two roads approaching a three-lane exit after 30 simulated minutes: the top road, with eagerness 0, is jammed in every lane, while the bottom road, with eagerness 100, is busy but keeps moving](docs/screenshot.png)
 
 To run it, open `index.html` in a browser. There is nothing to build or
 install.
@@ -28,9 +28,10 @@ install.
   enough room left to make the lane changes, about 300 ft per lane. At 100,
   a driver starts trying as soon as they arrive, 1.5 miles before the
   choke-point, and stays in that lane once there. Each driver's
-  eagerness varies a little around the value you set. Eager drivers who have
-  to get over adjust their speed to line up with a gap, and accept a slightly
-  tighter gap than other drivers do.
+  eagerness varies a little around the value you set. Once drivers decide
+  it's time to get over, they adjust their speed to line up with a gap and
+  accept a slightly tighter gap than usual. The longer they go without
+  managing it, the tighter the gap they'll accept.
 
 ### Playback
 

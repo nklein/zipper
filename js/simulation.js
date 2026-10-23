@@ -52,9 +52,12 @@
       return Math.min(1, Math.max(0, base + car.eagerNoise));
     }
 
-    // Eager drivers accept a slightly tighter gap when they have to get over.
+    // A driver who has committed to getting over accepts a slightly tighter
+    // gap, and tighter still the farther they've driven without managing it.
     mergeHeadway(car) {
-      return cfg.safeHeadwaySec * (1 - cfg.mergeHeadwayCut * this.eagerness(car));
+      const start = 1 - cfg.mergeHeadwayCut;
+      const progress = Math.min(1, (car.x - car.commitX) / cfg.mergeHeadwayShrinkFt);
+      return cfg.safeHeadwaySec * (start - (start - cfg.mergeHeadwayMinFactor) * progress);
     }
 
     // Mergers well below their desired speed (traffic already backed up)
@@ -282,6 +285,8 @@
       const committed = beforeChoke && Math.min(dist, cfg.arrivalToChokeFt) <= horizon;
       const urgent = committed && need > 0;
       car.urgent = urgent;
+      if (!urgent) car.commitX = null;
+      else if (car.commitX === null) car.commitX = car.x;
 
       car.mergeTarget = urgent && dist < this.courtesyZone(car)
         ? car.lane + (car.lane < lo ? 1 : -1)
@@ -384,6 +389,7 @@
         nextEval: this.time,
         mergeTarget: -1,
         urgent: false,
+        commitX: null,
         wallWait: 0,
         diverted: false,
       };

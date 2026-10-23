@@ -33,7 +33,9 @@ Zipper.config = {
   headwaySec: 1.4,              // desired following time
   safeGapFt: 5,                 // smallest gap anyone will merge into
   safeHeadwaySec: 0.6,          // smallest following time accepted when merging
-  mergeHeadwayCut: 0.2,         // fully eager drivers who must get over accept 20% less than that
+  mergeHeadwayCut: 0.1,         // once committed to getting over, accept 10% less than that...
+  mergeHeadwayMinFactor: 0.5,   // ...shrinking to this fraction of it...
+  mergeHeadwayShrinkFt: 2640,   // ...after driving this far since committing
   entryHeadwaySec: 1.0,         // following time required to enter the road
   hardGapFt: 1,                 // absolute minimum bumper gap (collision guard)
   politeness: 0.3,              // how much a passer cares about the car it cuts in front of

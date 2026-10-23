@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zipper</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Zipper</h1>
+    <p>Identical traffic approaching the same choke-point. The only difference
+      between the two roads is how eager drivers are to get into the lane they
+      need.</p>
+  </header>
+
+  <main>
+    <form id="controls">
+      <fieldset>
+        <legend>Eagerness</legend>
+        <label>Top road
+          <output id="eagerAValue" for="eagerA"></output>
+          <input type="range" id="eagerA" min="0" max="100" step="1" value="10">
+        </label>
+        <label>Bottom road
+          <output id="eagerBValue" for="eagerB"></output>
+          <input type="range" id="eagerB" min="0" max="100" step="1" value="80">
+        </label>
+        <p>0 waits until the last moment to change lanes; 100 gets over at the
+          first opening and stays there.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Playback</legend>
+        <div>
+          <button type="button" id="play">Play</button>
+          <button type="button" id="pause">Pause</button>
+          <button type="button" id="slower">Slower</button>
+          <button type="button" id="faster">Faster</button>
+          <button type="button" id="clear">Clear</button>
+        </div>
+        <dl>
+          <div><dt>Speed</dt><dd><output id="playbackSpeed"></output></dd></div>
+          <div><dt>Simulated time</dt><dd><output id="clock"></output></dd></div>
+          <div><dt>Cars waiting to arrive</dt><dd><output id="waiting"></output></dd></div>
+        </dl>
+      </fieldset>
+
+      <fieldset>
+        <legend>Choke-point</legend>
+        <label>Type
+          <select id="chokeType">
+            <option value="exit">Exit</option>
+            <option value="reduction">Lane reduction</option>
+          </select>
+        </label>
+        <label>Lanes before
+          <input type="number" id="lanesBefore" min="2" max="8" step="1" value="4">
+        </label>
+        <label>Lanes continuing
+          <input type="number" id="lanesAfter" min="1" max="7" step="1" value="3">
+        </label>
+        <label data-exit-only>Cars taking the exit
+          <output id="exitShareValue" for="exitShare"></output>
+          <input type="range" id="exitShare" min="0" max="100" step="1" value="30">
+        </label>
+        <p data-exit-only>Ringed cars want the exit.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Traffic</legend>
+        <label>Highway speed (mph)
+          <input type="number" id="highwayMph" min="5" max="120" step="1" value="65">
+        </label>
+        <label><span><span id="limitLabel">Off-ramp speed limit</span> (mph)</span>
+          <input type="number" id="limitMph" min="5" max="120" step="1" value="35">
+        </label>
+        <label>Arrivals (cars per second)
+          <input type="number" id="arrivalRate" min="0" max="10" step="0.1" value="1">
+        </label>
+      </fieldset>
+    </form>
+
+    <figure id="simA">
+      <canvas aria-label="Top road simulation"></canvas>
+      <figcaption>
+        <h2>Top road · eagerness <output name="eagerness"></output></h2>
+        <dl>
+          <div><dt>Through choke-point</dt><dd><output name="flowPerMin"></output>/min</dd></div>
+          <div><dt>Average trip</dt><dd><output name="avgTripSec"></output></dd></div>
+          <div><dt>Trip std. dev.</dt><dd><output name="tripStdDevSec"></output></dd></div>
+          <div><dt>Finished</dt><dd><output name="completed"></output></dd></div>
+          <div><dt>On the road</dt><dd><output name="onRoad"></output></dd></div>
+          <div title="Cars going under half the after-choke-point speed limit"><dt>Slow</dt><dd><output name="slow"></output></dd></div>
+          <div data-exit-only><dt>Gave up on their lane</dt><dd><output name="diverted"></output></dd></div>
+        </dl>
+      </figcaption>
+    </figure>
+
+    <figure id="simB">
+      <figcaption>
+        <h2>Bottom road · eagerness <output name="eagerness"></output></h2>
+        <dl>
+          <div><dt>Through choke-point</dt><dd><output name="flowPerMin"></output>/min</dd></div>
+          <div><dt>Average trip</dt><dd><output name="avgTripSec"></output></dd></div>
+          <div><dt>Trip std. dev.</dt><dd><output name="tripStdDevSec"></output></dd></div>
+          <div><dt>Finished</dt><dd><output name="completed"></output></dd></div>
+          <div><dt>On the road</dt><dd><output name="onRoad"></output></dd></div>
+          <div title="Cars going under half the after-choke-point speed limit"><dt>Slow</dt><dd><output name="slow"></output></dd></div>
+          <div data-exit-only><dt>Gave up on their lane</dt><dd><output name="diverted"></output></dd></div>
+        </dl>
+      </figcaption>
+      <canvas aria-label="Bottom road simulation"></canvas>
+    </figure>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/random.js"></script>
+  <script src="js/simulation.js"></script>
+  <script src="js/traffic.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

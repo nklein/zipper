@@ -1,0 +1,228 @@
+:root {
+  color-scheme: light dark;
+
+  --page-background: #f3f1ec;
+  --page-text: #20232a;
+  --muted-text: #5f6670;
+  --panel-background: #ffffff;
+  --panel-border: #d9d4ca;
+  --accent: #2f6fde;
+  --accent-text: #ffffff;
+  --radius: 0.5rem;
+  --gap: 1rem;
+
+  /* Canvas drawing: read by js/renderer.js */
+  --ground: #a9c495;
+  --road-surface: #5c5f66;
+  --road-edge: #f4f4f4;
+  --lane-marking: #f4f4f4;
+  --choke-marking: #ffcc33;
+  --car-colors: #e6194b, #3cb44b, #ffe119, #4363d8, #f58231, #911eb4, #42d4f4, #f032e6,
+    #bfef45, #fabed4, #469990, #dcbeff, #9a6324, #fffac8, #aaffc3, #ffd8b1;
+  --car-outline: #1b1b1b;
+  --exit-marker: #ffffff;
+  --max-lane-height: 30;    /* px */
+  --road-padding: 8;        /* px */
+  --car-size: 0.36;         /* radius as a fraction of lane height */
+  --line-width: 1;          /* px */
+  --exit-marker-width: 2;   /* px */
+  --lane-dash: 8 10;        /* px */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page-background: #16181c;
+    --page-text: #e6e8eb;
+    --muted-text: #9aa1ab;
+    --panel-background: #1f2228;
+    --panel-border: #343841;
+    --accent: #6d9bf0;
+    --accent-text: #0d1117;
+
+    --ground: #2c3a27;
+    --road-surface: #43464d;
+    --road-edge: #d8d8d8;
+    --lane-marking: #bdbdbd;
+    --car-outline: #0b0b0b;
+  }
+}
+
+[hidden] {
+  display: none !important;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: var(--gap);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.4;
+  background: var(--page-background);
+  color: var(--page-text);
+}
+
+header {
+  margin-bottom: var(--gap);
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+header p,
+fieldset p {
+  margin: 0;
+  color: var(--muted-text);
+}
+
+h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+main {
+  display: grid;
+  grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+  gap: var(--gap);
+  align-items: start;
+}
+
+form {
+  grid-row: 1 / -1;
+  display: grid;
+  gap: var(--gap);
+}
+
+fieldset {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.75rem var(--gap) var(--gap);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  background: var(--panel-background);
+}
+
+legend {
+  padding: 0 0.25rem;
+  font-weight: 600;
+}
+
+fieldset p {
+  font-size: 0.85rem;
+}
+
+label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+}
+
+label > input[type="range"] {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+input[type="number"] {
+  width: 5em;
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
+input[type="range"] {
+  accent-color: var(--accent);
+}
+
+output {
+  font-variant-numeric: tabular-nums;
+}
+
+fieldset div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+button {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-text);
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin: 0;
+}
+
+dl div {
+  display: flex;
+  gap: 0.4rem;
+}
+
+dt {
+  color: var(--muted-text);
+}
+
+dt::after {
+  content: ":";
+}
+
+dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+figure {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  background: var(--panel-background);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: clamp(8rem, 26vh, 16rem);
+  border-radius: calc(var(--radius) / 2);
+  background: var(--ground);
+}
+
+figcaption {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 52rem) {
+  main {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  form {
+    grid-row: auto;
+  }
+}

@@ -502,21 +502,26 @@
         this.chokePasses.shift();
       }
       const count = this.completions.length;
-      const mean = count ? this.completions.reduce((sum, c) => sum + c.trip, 0) / count : NaN;
-      const variance = count
-        ? this.completions.reduce((sum, c) => sum + (c.trip - mean) ** 2, 0) / count
+      const meanTrip = count ? this.completions.reduce((sum, c) => sum + c.trip, 0) / count : NaN;
+      const tripVariance = count
+        ? this.completions.reduce((sum, c) => sum + (c.trip - meanTrip) ** 2, 0) / count
         : NaN;
       const flowSpan = Math.max(1, Math.min(cfg.flowWindowSec, now));
-      const onRoad = this.cars.length;
-      const speedSum = this.cars.reduce((sum, car) => sum + car.v, 0);
+      // Speeds of the cars still approaching the choke-point.
+      const speeds = this.cars.filter((car) => car.x < this.chokeX).map((car) => car.v);
+      const meanSpeed = speeds.length ? speeds.reduce((sum, v) => sum + v, 0) / speeds.length : NaN;
+      const speedVariance = speeds.length
+        ? speeds.reduce((sum, v) => sum + (v - meanSpeed) ** 2, 0) / speeds.length
+        : NaN;
       return {
         eagerness: this.settings.eagerness[this.which],
-        onRoad,
-        avgMph: onRoad ? fpsToMph(speedSum / onRoad) : NaN,
+        onRoad: this.cars.length,
+        avgMph: fpsToMph(meanSpeed),
+        speedStdDevMph: fpsToMph(Math.sqrt(speedVariance)),
         completed: this.completed,
         diverted: this.diverted,
-        avgTripSec: mean,
-        tripStdDevSec: Math.sqrt(variance),
+        avgTripSec: meanTrip,
+        tripStdDevSec: Math.sqrt(tripVariance),
         flowPerMin: this.chokePasses.length * 60 / flowSpan,
       };
     }

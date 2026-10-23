@@ -23,12 +23,7 @@
       this.time = 0;
       this.nextId = 0;
       for (const sim of this.sims) sim.reset(seed ^ 0x9E3779B9);
-      this.pending = Array.from({ length: this.settings.lanesBefore }, () => []);
       this.prepopulate();
-    }
-
-    get waiting() {
-      return this.pending.reduce((sum, queue) => sum + queue.length, 0);
     }
 
     makeSpec() {
@@ -57,6 +52,18 @@
       return true;
     }
 
+    // Joins both roads at the same place: the arrival point if both have
+    // room, otherwise far enough back that both do.
+    addArrival(spec) {
+      let x = 0;
+      for (;;) {
+        const xs = this.sims.map((sim) => sim.entryPoint(spec, x));
+        if (xs.every((at) => at === x)) break;
+        x = Math.min(...xs);
+      }
+      this.tryAdd(spec, x);
+    }
+
     // Scatter cars between the arrival point and the visible part of the
     // road, as if they had arrived over the last little while.
     prepopulate() {
@@ -75,13 +82,7 @@
     step(dt) {
       this.time += dt;
       const arrivals = this.rng.poisson(Math.max(0, this.settings.arrivalRate) * dt);
-      for (let i = 0; i < arrivals; i++) {
-        const spec = this.makeSpec();
-        this.pending[spec.lane].push(spec);
-      }
-      for (const queue of this.pending) {
-        if (queue.length && this.tryAdd(queue[0], 0)) queue.shift();
-      }
+      for (let i = 0; i < arrivals; i++) this.addArrival(this.makeSpec());
       for (const sim of this.sims) sim.step(dt);
     }
   }

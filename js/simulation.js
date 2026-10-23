@@ -306,6 +306,19 @@
       return -1;
     }
 
+    // The first place at or behind x where a new car can join its lane.
+    entryPoint(spec, x = 0) {
+      const lane = this.lanes[spec.lane];
+      for (;;) {
+        if (this.entrySpeed(spec.lane, spec, x) >= 0) return x;
+        // Skip past whichever car is in the way.
+        const at = locate(lane, x);
+        const blocker = at < lane.length ? lane[at] : lane[at - 1];
+        const behind = blocker.x - blocker.len - cfg.minGapFt;
+        x = behind < x ? behind : x - 1;
+      }
+    }
+
     addCar(spec, x, v) {
       const car = {
         ...spec,

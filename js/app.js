@@ -104,7 +104,6 @@
 
   function showStats() {
     byId('clock').value = formatClock(traffic.time);
-    byId('waiting').value = traffic.waiting;
     traffic.sims.forEach((sim, i) => {
       const stats = sim.stats();
       const outputs = figures[i].querySelectorAll('output[name]');

@@ -2,7 +2,7 @@
 
 (function () {
   const cfg = Zipper.config;
-  const { mphToFps } = Zipper.units;
+  const { mphToFps, fpsToMph } = Zipper.units;
 
   // Each lane is an array of cars sorted by position, front-most first.
   // Returns the index at which a car at position x would be inserted.
@@ -507,11 +507,12 @@
         ? this.completions.reduce((sum, c) => sum + (c.trip - mean) ** 2, 0) / count
         : NaN;
       const flowSpan = Math.max(1, Math.min(cfg.flowWindowSec, now));
-      const slowSpeed = cfg.slowFraction * mphToFps(this.settings.limitMph);
+      const onRoad = this.cars.length;
+      const speedSum = this.cars.reduce((sum, car) => sum + car.v, 0);
       return {
         eagerness: this.settings.eagerness[this.which],
-        onRoad: this.cars.length,
-        slow: this.cars.reduce((n, car) => n + (car.v < slowSpeed ? 1 : 0), 0),
+        onRoad,
+        avgMph: onRoad ? fpsToMph(speedSum / onRoad) : NaN,
         completed: this.completed,
         diverted: this.diverted,
         avgTripSec: mean,

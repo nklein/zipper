@@ -66,7 +66,6 @@ Zipper.config = {
   maxStepsPerFrame: 400,
   statsWindowSec: 300,
   flowWindowSec: 60,
-  slowFraction: 0.5,            // "slow" = below this fraction of the after-choke-point limit
   realTimeScale: 4,             // simulated seconds per real second at "1×"
   playbackSpeeds: [0.25, 0.5, 1, 2, 4, 8, 16],
   defaultPlaybackIndex: 2,

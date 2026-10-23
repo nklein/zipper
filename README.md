@@ -82,8 +82,8 @@ Below each road:
   leaving the road, over the last five minutes.
 - **Finished**: how many cars have left the road.
 - **On the road**: how many cars are on the road right now.
-- **Slow**: how many cars are going under half of the speed limit past the
-  choke-point.
+- **Average speed**: the average speed of the cars on the road right now,
+  including any queued up behind the arrival point.
 - **Gave up on their lane** (exit only): how many drivers took the other road
   because they couldn't get into the lane they wanted.
 

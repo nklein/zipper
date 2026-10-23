@@ -111,6 +111,7 @@
         const value = stats[output.name];
         if (output.name.endsWith('Sec')) output.value = Number.isFinite(value) ? formatClock(value) : '—';
         else if (output.name === 'flowPerMin') output.value = value.toFixed(0);
+        else if (output.name === 'avgMph') output.value = Number.isFinite(value) ? value.toFixed(0) : '—';
         else output.value = value;
       }
     });

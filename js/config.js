@@ -33,6 +33,7 @@ Zipper.config = {
   headwaySec: 1.4,              // desired following time
   safeGapFt: 5,                 // smallest gap anyone will merge into
   safeHeadwaySec: 0.6,          // smallest following time accepted when merging
+  mergeHeadwayCut: 0.2,         // fully eager drivers who must get over accept 20% less than that
   entryHeadwaySec: 1.0,         // following time required to enter the road
   hardGapFt: 1,                 // absolute minimum bumper gap (collision guard)
   politeness: 0.3,              // how much a passer cares about the car it cuts in front of
@@ -42,6 +43,7 @@ Zipper.config = {
   perLaneChangeFt: 300,         // distance a last-moment driver allows for each lane change
   courtesyRangeFt: 200,         // how far ahead a courteous driver looks for mergers
   courtesyZoneFt: 500,          // mergers this close to the choke-point get courtesy
+  courtesySlowZoneFt: 5280,     // extra courtesy zone for a stopped merger (scales with slowness²)
   wallZoneFt: 10,               // "stuck at the choke-point" distance
   stoppedFps: 1,
   priorityGapFt: 0.25,          // room a priority car needs to squeeze in

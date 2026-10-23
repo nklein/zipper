@@ -52,6 +52,18 @@
       return Math.min(1, Math.max(0, base + car.eagerNoise));
     }
 
+    // Eager drivers accept a slightly tighter gap when they have to get over.
+    mergeHeadway(car) {
+      return cfg.safeHeadwaySec * (1 - cfg.mergeHeadwayCut * this.eagerness(car));
+    }
+
+    // Mergers well below their desired speed (traffic already backed up)
+    // get courtesy farther from the choke-point.
+    courtesyZone(car) {
+      const slowness = Math.max(0, 1 - car.v / this.desiredSpeed(car));
+      return cfg.courtesyZoneFt + cfg.courtesySlowZoneFt * slowness * slowness;
+    }
+
     desiredSpeed(car) { return mphToFps(this.settings.highwayMph) * car.speedFactor; }
     accel(car) { return mphToFps(cfg.accelMphps) * car.accelFactor; }
     comfortDecel(car) { return mphToFps(cfg.comfortDecelMphps) * car.decelFactor; }
@@ -200,6 +212,44 @@
       this.priority = candidates.length ? candidates[this.rng.int(candidates.length)] : null;
     }
 
+    // A driver who has to get over lines up with a gap in the next lane:
+    // the middle of the gap beside them if it is big enough, otherwise the
+    // middle of the one just behind (dropping back to it). If neither will
+    // do, they at least stay behind the car beside them so that a courteous
+    // follower's gap can open up. Returns a cap on acceleration (Infinity
+    // when not seeking a gap); gap seeking never brakes harder than is
+    // comfortable.
+    gapSeekingAcceleration(car) {
+      const target = this.mergeLane(car);
+      if (target < 0 || car === this.priority || car.x >= this.chokeX) return Infinity;
+      const { at, leader, follower } = this.neighborsIn(target, car.x);
+      if (!leader) return Infinity;
+      const behind = this.lanes[target][at + 1];
+      const headway = this.mergeHeadway(car);
+      const fits = (front, back) => !back || front.x - front.len - back.x
+        >= car.len + 2 * cfg.safeGapFt + headway * (front.v + back.v);
+      const middle = (front, back) => back && (front.x - front.len + back.x + car.len) / 2;
+
+      let front = leader;
+      let aimX;
+      if (!follower) {
+        // Open road behind the car beside: just keep behind it.
+      } else if (fits(leader, follower)) {
+        aimX = middle(leader, follower);
+      } else if (fits(follower, behind)) {
+        front = follower;
+        aimX = middle(follower, behind);
+      }
+
+      // A stand-in leader whose following distance puts the car at aimX.
+      const rearX = aimX === undefined
+        ? front.x - front.len
+        : aimX + cfg.minGapFt + car.v * cfg.headwaySec;
+      if (rearX <= car.x) return car.v >= front.v ? -this.comfortDecel(car) : 0;
+      return Math.max(-this.comfortDecel(car),
+        this.accelerationIn(car, car.lane, { x: rearX, len: 0, v: front.v }));
+    }
+
     requiredGap(follower, leader, followerDecel, headway) {
       const vf = follower.v;
       const vl = leader.v;
@@ -225,14 +275,15 @@
       const dist = this.chokeX - car.x;
       const beforeChoke = dist > 0;
       // Eagerness 1 commits from the arrival point; eagerness 0 waits until
-      // just enough room remains for the needed lane changes.
+      // just enough room remains for the needed lane changes. Cars backed
+      // up behind the arrival point count as being at it.
       const horizon = this.eagerness(car) * cfg.arrivalToChokeFt
         + cfg.perLaneChangeFt * Math.max(1, need);
-      const committed = beforeChoke && dist <= horizon;
+      const committed = beforeChoke && Math.min(dist, cfg.arrivalToChokeFt) <= horizon;
       const urgent = committed && need > 0;
       car.urgent = urgent;
 
-      car.mergeTarget = urgent && dist < cfg.courtesyZoneFt
+      car.mergeTarget = urgent && dist < this.courtesyZone(car)
         ? car.lane + (car.lane < lo ? 1 : -1)
         : -1;
       car.nextEval = this.time + (urgent ? 0 : cfg.laneChangeEvalSec * (0.5 + this.rng()));
@@ -256,11 +307,13 @@
         const at = locate(lane, car.x);
         const leader = at > 0 ? lane[at - 1] : null;
         const follower = at < lane.length ? lane[at] : null;
+        const merging = committed && candidateNeed < need;
         const prioritized = car === this.priority && candidateNeed < need;
-        if (prioritized ? !this.hasRoom(car, leader, follower) : !this.isSafe(car, leader, follower)) continue;
+        const headway = merging ? this.mergeHeadway(car) : cfg.safeHeadwaySec;
+        if (prioritized ? !this.hasRoom(car, leader, follower) : !this.isSafe(car, leader, follower, headway)) continue;
 
         let score;
-        if (committed && candidateNeed < need) {
+        if (merging) {
           score = Infinity;
         } else {
           const accThere = this.accelerationIn(car, candidate, leader);
@@ -353,8 +406,9 @@
       for (const lane of this.lanes) {
         for (let i = 0; i < lane.length; i++) {
           const car = lane[i];
-          car.acc = this.accelerationIn(car, car.lane, i > 0 ? lane[i - 1] : null,
-            this.courtesyLeader(car));
+          car.acc = Math.min(
+            this.accelerationIn(car, car.lane, i > 0 ? lane[i - 1] : null, this.courtesyLeader(car)),
+            this.gapSeekingAcceleration(car));
         }
       }
 

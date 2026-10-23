@@ -6,13 +6,13 @@
 
   const settings = {
     chokeType: 'exit',
-    lanesBefore: 4,
-    lanesAfter: 3,
+    lanesBefore: 3,
+    lanesAfter: 2,
     exitShare: 30,
     highwayMph: 65,
-    limitMph: 35,
+    limitMph: 65,
     arrivalRate: 1,
-    eagerness: [10, 80],
+    eagerness: [50, 80],
   };
 
   // Blank or half-typed number inputs keep the previous value.

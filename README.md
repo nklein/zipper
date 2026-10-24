@@ -9,13 +9,15 @@ last moment and zipper-merge, while drivers on the other get over as soon as
 they can. You can watch where the queues form and compare throughput and
 trip times.
 
+[Try Zipper online](https://eigenstate.solutions/projects/zipper/).
+
 Each car is a colored dot. In exit scenarios, the cars with a white border
 are the ones that want to take the exit. Everyone else wants to stay on the
 highway, and has to get out of the exit lanes before the choke-point.
 
 ![Two roads approaching a three-lane exit after 45 simulated minutes: the top road, with eagerness 0, is jammed in every lane, while the bottom road, with eagerness 30, is busy but keeps moving](docs/screenshot.png)
 
-To run it, open `index.html` in a browser. There is nothing to build or
+To run it locally, open `index.html` in a browser. There is nothing to build or
 install.
 
 <details>
